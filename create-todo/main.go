@@ -1,6 +1,7 @@
 package main
 
 import (
+	"serverless-todo/model"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -20,12 +21,6 @@ import (
 // https://serverless.com/framework/docs/providers/aws/events/apigateway/#lambda-proxy-integration
 type Response events.APIGatewayProxyResponse
 
-// Create struct to hold info about new item
-type Item struct {
-	Title       string
-	Description string
-}
-
 func getDynamoDbClient() (svc *dynamodb.DynamoDB) {
 	// Initialize a session that the SDK will use to load
 	sess := session.Must(session.NewSession())
@@ -36,7 +31,7 @@ func getDynamoDbClient() (svc *dynamodb.DynamoDB) {
 	return
 }
 
-func saveTodo(item *Item) (resp Response, returnError error) {
+func saveTodo(item *model.Item) (resp Response, returnError error) {
 	svc := getDynamoDbClient()
 
 	av, returnError := dynamodbattribute.MarshalMap(item)
@@ -85,7 +80,9 @@ func saveTodo(item *Item) (resp Response, returnError error) {
 // Handler is our lambda handler invoked by the `lambda.Start` function call
 func Handler(ctx context.Context) (resp Response, returnError error) {
 
-	return saveTodo(&Item{
+	
+
+	return saveTodo(&model.Item{
 		Title:       "The Big New Movie",
 		Description: "Nothing happens at all.",
 	})

@@ -80,7 +80,7 @@ functions:
     events:
       - http:
           path: create
-          method: post
+          method: put
   delete-todo:
     handler: bin/delete-todo
     events:
