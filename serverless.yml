@@ -30,7 +30,12 @@ provider:
      - dynamodb:PutItem
      - dynamodb:UpdateItem
      - dynamodb:DeleteItem
-    Resource: "arn:aws:dynamodb:us-east-1:821675055938:table/serverless-todo"
+    Resource:
+      Fn::Join:
+        - ""
+        - - "arn:aws:dynamodb:*:*:table/"
+          - Ref: "TodoTable"
+
 
 # you can overwrite defaults here
 #   stage: dev
@@ -148,10 +153,14 @@ resources:
       DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
-          - AttributeName: Title
+          - AttributeName: Id
             AttributeType: S
+          # - AttributeName: Title
+          #   AttributeType: S
+          # - AttributeName: Description
+          #   AttributeType: S
         KeySchema:
-          - AttributeName: Title
+          - AttributeName: Id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 5

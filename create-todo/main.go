@@ -1,8 +1,6 @@
 package main
 
 import (
-	//"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"serverless-todo/db"
@@ -42,7 +40,7 @@ func saveTodo(item *model.Item) (resp Response, returnError error) {
 		StatusCode:      200,
 		IsBase64Encoded: false,
 		//Body:            buf.String(),
-		Body:            string(body),
+		Body: string(body),
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 			//"X-MyCompany-Func-Reply": "hello-handler",
@@ -57,11 +55,15 @@ func Handler(req events.APIGatewayProxyRequest) (resp Response, returnError erro
 
 	golog.SetLevel("debug")
 
-	golog.Debugf("Valid json: %v", json.Valid(req.Body))
+	body := []byte(req.Body)
+
+	golog.Debugf("req: %v", req)
+	golog.Debugf("input: %v", req.Body)
+	golog.Debugf("Valid json: %v", json.Valid(body))
 
 	requestItem := model.Item{}
 
-	json.Unmarshal(req.Body, requestItem)
+	json.Unmarshal(body, &requestItem)
 
 	return saveTodo(&requestItem)
 }
