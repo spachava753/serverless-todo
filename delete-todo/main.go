@@ -1,9 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
+	"serverless-todo/db"
+
+	"github.com/kataras/golog"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -15,29 +16,44 @@ import (
 // https://serverless.com/framework/docs/providers/aws/events/apigateway/#lambda-proxy-integration
 type Response events.APIGatewayProxyResponse
 
-// Handler is our lambda handler invoked by the `lambda.Start` function call
-func Handler(ctx context.Context) (Response, error) {
-	var buf bytes.Buffer
+func deleteTodo(id string) (resp Response, returnError error) {
+	itemRepo := db.ItemRepository{}
 
-	body, err := json.Marshal(map[string]interface{}{
-		"message": "Todo deleted successfully",
-	})
-	if err != nil {
-		return Response{StatusCode: 404}, err
+	deletedItem, returnError := itemRepo.Delete(id)
+	if returnError != nil {
+		golog.Error("Got error deleting the item:")
+		golog.Error(returnError.Error())
+		return
 	}
-	json.HTMLEscape(&buf, body)
 
-	resp := Response{
+	body, returnError := json.Marshal(deletedItem)
+	if returnError != nil {
+		return Response{StatusCode: 404}, returnError
+	}
+
+	resp = Response{
 		StatusCode:      200,
 		IsBase64Encoded: false,
-		Body:            buf.String(),
+		Body:            string(body),
 		Headers: map[string]string{
-			"Content-Type":           "application/json",
-			"X-MyCompany-Func-Reply": "hello-handler",
+			"Content-Type": "application/json",
 		},
 	}
 
-	return resp, nil
+	return
+}
+
+// Handler is our lambda handler invoked by the `lambda.Start` function call
+func Handler(req events.APIGatewayProxyRequest) (resp Response, returnError error) {
+
+	golog.SetLevel("debug")
+
+	body := req.PathParameters["id"]
+
+	golog.Debugf("req: %v", req)
+	golog.Debugf("input: %v", req.PathParameters["id"])
+
+	return deleteTodo(body)
 }
 
 func main() {

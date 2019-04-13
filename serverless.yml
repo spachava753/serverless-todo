@@ -62,10 +62,11 @@ provider:
 #    variable1: value1
 
 package:
- exclude:
+  exclude:
    - ./**
- include:
+  include:
    - ./bin/**
+  individually: true
 
 functions:
   hello:
@@ -90,8 +91,12 @@ functions:
     handler: bin/delete-todo
     events:
       - http:
-          path: delete
+          path: delete/{id}
           method: delete
+          request:
+            parameters: 
+              paths: 
+                id: true
   list-todo:
     handler: bin/list-todo
     events:
