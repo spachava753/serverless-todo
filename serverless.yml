@@ -13,6 +13,13 @@
 
 service: serverless-todo # NOTE: update this with your service name
 
+package:
+  exclude:
+   - ./**
+  include:
+   - ./bin/**
+  individually: true
+
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
 # frameworkVersion: "=X.X.X"
@@ -60,13 +67,6 @@ provider:
 # you can define service wide environment variables here
 #  environment:
 #    variable1: value1
-
-package:
-  exclude:
-   - ./**
-  include:
-   - ./bin/**
-  individually: true
 
 functions:
   hello:

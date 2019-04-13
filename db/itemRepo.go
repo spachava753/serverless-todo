@@ -91,7 +91,8 @@ func (itemRepo ItemRepository) Delete(id string) (deletedItem *model.Item, err e
 				S: aws.String(id),
 			},
 		},
-		TableName: aws.String(tableName),
+		TableName:    aws.String(tableName),
+		ReturnValues: aws.String(dynamodb.ReturnValueAllOld),
 	}
 
 	result, err := svc.DeleteItem(input)
@@ -101,23 +102,11 @@ func (itemRepo ItemRepository) Delete(id string) (deletedItem *model.Item, err e
 		return nil, err
 	}
 
-	if result.Attributes != nil {
-		if result.Attributes["Id"] != nil {
-			golog.Debug("Id: is NOT null")
-			golog.Debugf("Id: %v", result.Attributes["Id"].String())
-		} else {
-			golog.Debug("Id: is null")
-		}
+	deletedItem = &model.Item{
+		Id:          *result.Attributes["Id"].S,
+		Title:       *result.Attributes["Title"].S,
+		Description: *result.Attributes["Description"].S,
 	}
-
-	//golog.Debugf("Title: %v", result.Attributes["Title"].String())
-	//golog.Debugf("Description: %v", result.Attributes["Description"].String())
-
-	/* deletedItem = &model.Item{
-		Id:          result.Attributes["Id"].GoString(),
-		Title:       result.Attributes["Title"].GoString(),
-		Description: result.Attributes["Description"].GoString(),
-	} */
 
 	return
 }
