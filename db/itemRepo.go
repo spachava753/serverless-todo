@@ -111,6 +111,28 @@ func (itemRepo ItemRepository) Delete(id string) (deletedItem *model.Item, err e
 	return
 }
 
-func (itemRepo ItemRepository) GetAll() ([]model.Item, error) {
-	return nil, nil
+func (itemRepo ItemRepository) GetAll() (savedItems []model.Item, err error) {
+	svc := getDynamoDbClient()
+
+	input := &dynamodb.ScanInput{
+		TableName: aws.String(tableName),
+	}
+
+	result, err := svc.Scan(input)
+	if err != nil {
+		golog.Errorf("Could not scan for items: %v", err)
+	}
+
+	golog.Debugf("result: %v", result)
+
+	savedItems = make([]model.Item, *result.Count)
+	for index, mapVal := range result.Items {
+		savedItems[index] = model.Item{
+			Id:          *mapVal["Id"].S,
+			Title:       *mapVal["Title"].S,
+			Description: *mapVal["Description"].S,
+		}
+	}
+
+	return
 }
