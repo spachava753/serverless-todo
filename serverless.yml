@@ -75,18 +75,17 @@ functions:
       - http:
           path: hello
           method: get
-  world:
-    handler: bin/world
-    events:
-      - http:
-          path: world
-          method: get
+          cors: true
+
   create-todo:
     handler: bin/create-todo
     events:
       - http:
           path: create
           method: put
+          cors: true
+        
+
   delete-todo:
     handler: bin/delete-todo
     events:
@@ -97,12 +96,18 @@ functions:
             parameters: 
               paths: 
                 id: true
+          cors: true
+        
+
   list-todo:
     handler: bin/list-todo
     events:
       - http:
           path: list
           method: get
+          cors: true
+        
+
           
 
 #    The following are a few example events you can configure
