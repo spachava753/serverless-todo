@@ -1,14 +1,33 @@
 <template>
-  <div>
-    List component
-    <p>{{ simpleMsg }}</p>
-    <div v-for="todo in todoList" :key="todo.Id">
-      <p>- {{ todo.Title }}</p>
-      <p>- {{ todo.Description }}</p>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col bg-dark text-white">
+                <a class="navbar-brand">SPORTS STORE</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-3 bg-info p-2">
+                <h4 class="text-white m-2">Categories</h4>
+            </div>
+            <div class="col-9 bg-success p-2">
+                <h4 class="text-white m-2">Products</h4>
+                  <div class="card-columns">
+
+                    <div v-for="todo in todoList" :key="todo.Id" class="card m-1 p-1 bg-light">
+                      <h4>{{todo.Title }}
+                        <span class="badge badge-pill badge-primary float-right">
+                          X
+                        </span>
+                      </h4>
+                        <div class="card-text bg-white p-1">{{ todo.Description }}</div>
+                    </div>
+                  </div>
+
+            </div>
+        </div>
     </div>
-    
-  </div>
 </template>
+
 
 <script>
 import axios from "axios";
