@@ -38,6 +38,7 @@ func listTodo() (resp Response, returnError error) {
 		Body:            string(body),
 		Headers: map[string]string{
 			"Content-Type": "application/json",
+			"Access-Control-Allow-Origin": "*",
 		},
 	}
 

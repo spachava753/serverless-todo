@@ -43,7 +43,7 @@ func saveTodo(item *model.Item) (resp Response, returnError error) {
 		Body: string(body),
 		Headers: map[string]string{
 			"Content-Type": "application/json",
-			//"X-MyCompany-Func-Reply": "hello-handler",
+			"Access-Control-Allow-Origin": "*",
 		},
 	}
 
