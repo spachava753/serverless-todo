@@ -1,17 +1,15 @@
 package main
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
+	"serverless-todo/db"
+	"serverless-todo/model"
+
+	"github.com/kataras/golog"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
 // Response is of type APIGatewayProxyResponse since we're leveraging the
@@ -20,62 +18,32 @@ import (
 // https://serverless.com/framework/docs/providers/aws/events/apigateway/#lambda-proxy-integration
 type Response events.APIGatewayProxyResponse
 
-// Create struct to hold info about new item
-type Item struct {
-	Title       string
-	Description string
-}
+func saveTodo(item *model.Item) (resp Response, returnError error) {
+	itemRepo := db.ItemRepository{}
 
-func getDynamoDbClient() (svc *dynamodb.DynamoDB) {
-	// Initialize a session that the SDK will use to load
-	sess := session.Must(session.NewSession())
-
-	// Create DynamoDB client
-	svc = dynamodb.New(sess)
-
-	return
-}
-
-func saveTodo(item *Item) (resp Response, returnError error) {
-	svc := getDynamoDbClient()
-
-	av, returnError := dynamodbattribute.MarshalMap(item)
+	savedItem, returnError := itemRepo.Insert(item)
 	if returnError != nil {
-		fmt.Println("Got error marshalling new movie item:")
+		fmt.Println("Got error saving the item:")
 		fmt.Println(returnError.Error())
 		return
 	}
 
-	// Create item in table TodoList
-	tableName := "serverless-todo"
+	//var buf bytes.Buffer
 
-	input := &dynamodb.PutItemInput{
-		Item:      av,
-		TableName: aws.String(tableName),
-	}
-
-	_, returnError = svc.PutItem(input)
-	if returnError != nil {
-		fmt.Println("Got error calling PutItem:")
-		fmt.Println(returnError.Error())
-		return
-	}
-
-	var buf bytes.Buffer
-
-	body, returnError := json.Marshal(av)
+	body, returnError := json.Marshal(savedItem)
 	if returnError != nil {
 		return Response{StatusCode: 404}, returnError
 	}
-	json.HTMLEscape(&buf, body)
+	//json.Indent(&buf, body, "", "\t")
 
 	resp = Response{
 		StatusCode:      200,
 		IsBase64Encoded: false,
-		Body:            buf.String(),
+		//Body:            buf.String(),
+		Body: string(body),
 		Headers: map[string]string{
 			"Content-Type": "application/json",
-			//"X-MyCompany-Func-Reply": "hello-handler",
+			"Access-Control-Allow-Origin": "*",
 		},
 	}
 
@@ -83,12 +51,21 @@ func saveTodo(item *Item) (resp Response, returnError error) {
 }
 
 // Handler is our lambda handler invoked by the `lambda.Start` function call
-func Handler(ctx context.Context) (resp Response, returnError error) {
+func Handler(req events.APIGatewayProxyRequest) (resp Response, returnError error) {
 
-	return saveTodo(&Item{
-		Title:       "The Big New Movie",
-		Description: "Nothing happens at all.",
-	})
+	golog.SetLevel("debug")
+
+	body := []byte(req.Body)
+
+	golog.Debugf("req: %v", req)
+	golog.Debugf("input: %v", req.Body)
+	golog.Debugf("Valid json: %v", json.Valid(body))
+
+	requestItem := model.Item{}
+
+	json.Unmarshal(body, &requestItem)
+
+	return saveTodo(&requestItem)
 }
 
 func main() {

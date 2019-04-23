@@ -1,9 +1,11 @@
 package main
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
+	"fmt"
+	"serverless-todo/db"
+
+	"github.com/kataras/golog"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -15,29 +17,42 @@ import (
 // https://serverless.com/framework/docs/providers/aws/events/apigateway/#lambda-proxy-integration
 type Response events.APIGatewayProxyResponse
 
-// Handler is our lambda handler invoked by the `lambda.Start` function call
-func Handler(ctx context.Context) (Response, error) {
-	var buf bytes.Buffer
+func listTodo() (resp Response, returnError error) {
+	itemRepo := db.ItemRepository{}
 
-	body, err := json.Marshal(map[string]interface{}{
-		"message": "Todos retrieved successfully",
-	})
-	if err != nil {
-		return Response{StatusCode: 404}, err
+	savedItems, returnError := itemRepo.GetAll()
+	if returnError != nil {
+		fmt.Println("Got error saving the item:")
+		fmt.Println(returnError.Error())
+		return
 	}
-	json.HTMLEscape(&buf, body)
 
-	resp := Response{
+	body, returnError := json.Marshal(savedItems)
+	if returnError != nil {
+		return Response{StatusCode: 404}, returnError
+	}
+
+	resp = Response{
 		StatusCode:      200,
 		IsBase64Encoded: false,
-		Body:            buf.String(),
+		Body:            string(body),
 		Headers: map[string]string{
-			"Content-Type":           "application/json",
-			"X-MyCompany-Func-Reply": "hello-handler",
+			"Content-Type": "application/json",
+			"Access-Control-Allow-Origin": "*",
 		},
 	}
 
-	return resp, nil
+	return
+}
+
+// Handler is our lambda handler invoked by the `lambda.Start` function call
+func Handler(req events.APIGatewayProxyRequest) (resp Response, returnError error) {
+
+	golog.SetLevel("debug")
+
+	golog.Debugf("req: %v", req)
+
+	return listTodo()
 }
 
 func main() {

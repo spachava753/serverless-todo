@@ -13,6 +13,13 @@
 
 service: serverless-todo # NOTE: update this with your service name
 
+package:
+  exclude:
+   - ./**
+  include:
+   - ./bin/**
+  individually: true
+
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
 # frameworkVersion: "=X.X.X"
@@ -30,7 +37,12 @@ provider:
      - dynamodb:PutItem
      - dynamodb:UpdateItem
      - dynamodb:DeleteItem
-    Resource: "arn:aws:dynamodb:us-east-1:821675055938:table/serverless-todo"
+    Resource:
+      Fn::Join:
+        - ""
+        - - "arn:aws:dynamodb:*:*:table/"
+          - Ref: "TodoTable"
+
 
 # you can overwrite defaults here
 #   stage: dev
@@ -56,12 +68,6 @@ provider:
 #  environment:
 #    variable1: value1
 
-package:
- exclude:
-   - ./**
- include:
-   - ./bin/**
-
 functions:
   hello:
     handler: bin/hello
@@ -69,30 +75,39 @@ functions:
       - http:
           path: hello
           method: get
-  world:
-    handler: bin/world
-    events:
-      - http:
-          path: world
-          method: get
+          cors: true
+
   create-todo:
     handler: bin/create-todo
     events:
       - http:
           path: create
-          method: post
+          method: put
+          cors: true
+        
+
   delete-todo:
     handler: bin/delete-todo
     events:
       - http:
-          path: delete
+          path: delete/{id}
           method: delete
+          request:
+            parameters: 
+              paths: 
+                id: true
+          cors: true
+        
+
   list-todo:
     handler: bin/list-todo
     events:
       - http:
           path: list
           method: get
+          cors: true
+        
+
           
 
 #    The following are a few example events you can configure
@@ -148,10 +163,14 @@ resources:
       DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
-          - AttributeName: Title
+          - AttributeName: Id
             AttributeType: S
+          # - AttributeName: Title
+          #   AttributeType: S
+          # - AttributeName: Description
+          #   AttributeType: S
         KeySchema:
-          - AttributeName: Title
+          - AttributeName: Id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 5
